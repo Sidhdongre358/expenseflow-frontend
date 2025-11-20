@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, useLocation, Navigate } from 'react-router-d
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Modal } from './components/Modal';
+import { ChatBot } from './components/ChatBot';
 import { Dashboard } from './pages/Dashboard';
 import { Expenses } from './pages/Expenses';
 import { ExpenseDetails } from './pages/ExpenseDetails';
@@ -17,6 +18,7 @@ import { Budgets } from './pages/Budgets';
 import { Profile } from './pages/Profile';
 import { TeamSettings } from './pages/TeamSettings';
 import { OrgSettings } from './pages/OrgSettings';
+import { Billing } from './pages/Billing';
 
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setSidebarOpen, setTheme } from './features/ui/uiSlice';
@@ -45,7 +47,7 @@ const Layout: React.FC<{
         isOpen={isSidebarOpen}
         onClose={() => dispatch(setSidebarOpen(false))}
       />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         <Header 
           onOpenNewExpense={onOpenNewExpense} 
           onToggleSidebar={() => dispatch(setSidebarOpen(true))}
@@ -64,6 +66,8 @@ const Layout: React.FC<{
         <main className="flex-1 overflow-y-auto scroll-smooth">
           {children}
         </main>
+        {/* AI Chatbot Overlay */}
+        <ChatBot />
       </div>
     </div>
   );
@@ -120,7 +124,7 @@ const App: React.FC = () => {
           {/* SaaS Admin Routes */}
           <Route path="/team" element={<TeamSettings />} />
           <Route path="/org-settings" element={<OrgSettings />} />
-          <Route path="/billing" element={<OrgSettings />} /> {/* Reuse OrgSettings for now */}
+          <Route path="/billing" element={<Billing />} /> 
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

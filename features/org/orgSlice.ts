@@ -1,4 +1,3 @@
-
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Organization, OrgMember, LoadingStatus } from '../../types';
 import { api } from '../../services/api';
@@ -88,6 +87,26 @@ export const updateOrgSettings = createAsyncThunk(
     }
 );
 
+export const addOrgCategory = createAsyncThunk(
+    'org/addCategory',
+    async (category: string, { getState }) => {
+        const state = getState() as RootState;
+        const orgId = state.orgs.activeOrgId;
+        if (!orgId) throw new Error("No active org");
+        return await api.orgs.addCategory(orgId, category);
+    }
+);
+
+export const removeOrgCategory = createAsyncThunk(
+    'org/removeCategory',
+    async (category: string, { getState }) => {
+        const state = getState() as RootState;
+        const orgId = state.orgs.activeOrgId;
+        if (!orgId) throw new Error("No active org");
+        return await api.orgs.removeCategory(orgId, category);
+    }
+);
+
 export const orgSlice = createSlice({
   name: 'org',
   initialState,
@@ -132,6 +151,27 @@ export const orgSlice = createSlice({
           state.activeOrg = action.payload;
           const idx = state.myOrgs.findIndex(o => o.id === action.payload.id);
           if (idx !== -1) state.myOrgs[idx] = action.payload;
+      })
+      .addCase(addOrgCategory.fulfilled, (state, action) => {
+          if (state.activeOrg) {
+              const currentCats = state.activeOrg.categories || [];
+              if(!currentCats.includes(action.payload)) {
+                  const newCats = [...currentCats, action.payload];
+                  state.activeOrg.categories = newCats;
+                  // Sync myOrgs
+                  const idx = state.myOrgs.findIndex(o => o.id === state.activeOrgId);
+                  if (idx !== -1) state.myOrgs[idx].categories = newCats;
+              }
+          }
+      })
+      .addCase(removeOrgCategory.fulfilled, (state, action) => {
+          if (state.activeOrg && state.activeOrg.categories) {
+              const newCats = state.activeOrg.categories.filter(c => c !== action.payload);
+              state.activeOrg.categories = newCats;
+              // Sync myOrgs
+              const idx = state.myOrgs.findIndex(o => o.id === state.activeOrgId);
+              if (idx !== -1) state.myOrgs[idx].categories = newCats;
+          }
       });
   },
 });

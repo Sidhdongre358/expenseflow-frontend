@@ -1,5 +1,5 @@
 
-import { Budget, Expense, UserProfile, AppNotification, Organization, OrgMember } from '../types';
+import { Budget, Expense, UserProfile, AppNotification, Organization, OrgMember, Invoice, PaymentMethod } from '../types';
 
 // Utility to simulate network delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -12,6 +12,8 @@ interface MockDBState {
   expenses: Record<string, Expense[]>; // orgId -> expenses[]
   budgets: Record<string, Budget[]>; // orgId -> budgets[]
   notifications: Record<string, AppNotification[]>; // orgId -> notifications[]
+  invoices: Record<string, Invoice[]>;
+  paymentMethods: Record<string, PaymentMethod[]>;
   user: UserProfile;
 }
 
@@ -28,8 +30,26 @@ const DB: MockDBState = {
     bio: 'Finance enthusiast looking to streamline operations.'
   },
   organizations: {
-    'org1': { id: 'org1', name: 'Acme Corp', slug: 'acme', plan: 'Pro', currency: 'USD', logo: '' },
-    'org2': { id: 'org2', name: 'Blueberry Labs', slug: 'blueberry', plan: 'Free', currency: 'EUR', logo: '' }
+    'org1': { 
+        id: 'org1', 
+        name: 'Acme Corp', 
+        slug: 'acme', 
+        plan: 'Pro', 
+        currency: 'USD', 
+        logo: '',
+        billingEmail: 'billing@acme.com',
+        categories: ['Software', 'Travel', 'Office Supplies', 'Marketing', 'Food']
+    },
+    'org2': { 
+        id: 'org2', 
+        name: 'Blueberry Labs', 
+        slug: 'blueberry', 
+        plan: 'Free', 
+        currency: 'EUR', 
+        logo: '',
+        billingEmail: 'accounts@blueberry.io',
+        categories: ['Software', 'Hosting', 'Contractors']
+    }
   },
   members: {
     'org1': [
@@ -64,6 +84,17 @@ const DB: MockDBState = {
        { id: '1', orgId: 'org1', title: 'Expense Approved', description: 'Figma Subscription approved.', timestamp: new Date().toISOString(), type: 'success', read: false },
     ],
     'org2': []
+  },
+  invoices: {
+      'org1': [
+          { id: 'INV-2023-001', date: 'Oct 01, 2023', amount: 29.00, status: 'Paid' },
+          { id: 'INV-2023-002', date: 'Sep 01, 2023', amount: 29.00, status: 'Paid' },
+      ]
+  },
+  paymentMethods: {
+      'org1': [
+          { id: 'pm_1', type: 'Visa', last4: '4242', expiry: '12/24' }
+      ]
   }
 };
 
@@ -102,7 +133,9 @@ export const api = {
             slug,
             plan: 'Free',
             currency: 'USD',
-            logo: ''
+            logo: '',
+            categories: ['Software', 'Travel', 'Office Supplies'],
+            billingEmail: DB.user.email
         };
         DB.organizations[id] = newOrg;
         // Add creator as admin
@@ -168,6 +201,27 @@ export const api = {
         await delay(500);
         DB.organizations[orgId] = { ...DB.organizations[orgId], ...updates };
         return DB.organizations[orgId];
+    },
+    addCategory: async (orgId: string, category: string): Promise<string> => {
+        await delay(300);
+        const org = DB.organizations[orgId];
+        if (org) {
+            const cats = org.categories || [];
+            if (!cats.includes(category)) {
+                org.categories = [...cats, category];
+            }
+            return category;
+        }
+        throw new Error("Org not found");
+    },
+    removeCategory: async (orgId: string, category: string): Promise<string> => {
+        await delay(300);
+        const org = DB.organizations[orgId];
+        if (org && org.categories) {
+            org.categories = org.categories.filter(c => c !== category);
+            return category;
+        }
+        return category;
     }
   },
   expenses: {
@@ -265,5 +319,16 @@ export const api = {
       }
       return true;
     }
+  },
+  
+  billing: {
+      getInvoices: async (orgId: string): Promise<Invoice[]> => {
+          await delay(500);
+          return DB.invoices[orgId] || [];
+      },
+      getPaymentMethods: async (orgId: string): Promise<PaymentMethod[]> => {
+          await delay(400);
+          return DB.paymentMethods[orgId] || [];
+      }
   }
 };

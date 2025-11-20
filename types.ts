@@ -23,8 +23,10 @@ export interface Organization {
   name: string;
   slug: string;
   logo?: string;
+  billingEmail?: string;
   plan: 'Free' | 'Pro' | 'Enterprise';
   currency: CurrencyCode;
+  categories?: string[];
 }
 
 export interface OrgMember {
@@ -83,6 +85,20 @@ export interface AppNotification {
   timestamp: string;
   type: 'success' | 'warning' | 'info' | 'danger';
   read: boolean;
+}
+
+export interface Invoice {
+    id: string;
+    date: string;
+    amount: number;
+    status: 'Paid' | 'Pending' | 'Overdue';
+}
+
+export interface PaymentMethod {
+    id: string;
+    type: 'Visa' | 'Mastercard' | 'Amex';
+    last4: string;
+    expiry: string;
 }
 
 export type LoadingStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
