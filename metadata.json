@@ -1,0 +1,5 @@
+{
+  "name": "ExpenseFlow",
+  "description": "A smart expense management dashboard with comprehensive reporting, expense tracking, and administrative controls.",
+  "requestFramePermissions": []
+}
